@@ -797,8 +797,9 @@ async fn run_auto(mut cli: Cli, resolved_models: Vec<PathBuf>, requested_model_n
             let rediscover_node = node.clone();
             let rediscover_relays = nostr_relays(&cli.nostr_relay);
             let rediscover_relay_urls = cli.relay.clone();
+            let rediscover_mesh_name = cli.mesh_name.clone();
             tokio::spawn(async move {
-                nostr_rediscovery(rediscover_node, rediscover_relays, rediscover_relay_urls).await;
+                nostr_rediscovery(rediscover_node, rediscover_relays, rediscover_relay_urls, rediscover_mesh_name).await;
             });
         }
     } else {
@@ -814,6 +815,18 @@ async fn run_auto(mut cli: Cli, resolved_models: Vec<PathBuf>, requested_model_n
         tracing::info!("Mesh ID: {mesh_id}");
         eprintln!("Invite: {token}");
         eprintln!("Waiting for peers...");
+
+        // Originator also re-discovers: if we started solo and a matching mesh
+        // already exists on Nostr, we should join it instead of staying alone.
+        if cli.auto {
+            let rediscover_node = node.clone();
+            let rediscover_relays = nostr_relays(&cli.nostr_relay);
+            let rediscover_relay_urls = cli.relay.clone();
+            let rediscover_mesh_name = cli.mesh_name.clone();
+            tokio::spawn(async move {
+                nostr_rediscovery(rediscover_node, rediscover_relays, rediscover_relay_urls, rediscover_mesh_name).await;
+            });
+        }
     }
 
     // Start bootstrap proxy if joining an existing mesh.
@@ -1476,6 +1489,7 @@ async fn nostr_rediscovery(
     node: mesh::Node,
     nostr_relays: Vec<String>,
     relay_urls: Vec<String>,
+    mesh_name: Option<String>,
 ) {
     const CHECK_INTERVAL: std::time::Duration = std::time::Duration::from_secs(30);
     const GRACE_PERIOD: std::time::Duration = std::time::Duration::from_secs(90);
@@ -1512,7 +1526,7 @@ async fn nostr_rediscovery(
         }
 
         // Grace period expired — re-discover
-        eprintln!("🔍 Lost all peers — re-discovering meshes via Nostr...");
+        eprintln!("🔍 No peers — re-discovering meshes via Nostr...");
 
         let filter = nostr::MeshFilter::default();
         let meshes = match nostr::discover(&nostr_relays, &filter).await {
@@ -1525,8 +1539,20 @@ async fn nostr_rediscovery(
             }
         };
 
-        if meshes.is_empty() {
-            eprintln!("⚠️  No meshes found on Nostr — will retry");
+        // Filter by mesh name if set
+        let filtered: Vec<_> = if let Some(ref name) = mesh_name {
+            meshes.iter().filter(|m| {
+                m.listing.name.as_ref()
+                    .map(|n| n.eq_ignore_ascii_case(name))
+                    .unwrap_or(false)
+            }).collect()
+        } else {
+            meshes.iter().collect()
+        };
+
+        if filtered.is_empty() {
+            let name_hint = mesh_name.as_deref().unwrap_or("any");
+            eprintln!("⚠️  No meshes found on Nostr matching \"{name_hint}\" — will retry");
             alone_since = Some(std::time::Instant::now());
             continue;
         }
@@ -1538,16 +1564,19 @@ async fn nostr_rediscovery(
             .as_secs();
         let last_mesh_id = mesh::load_last_mesh_id();
 
-        let mut candidates: Vec<_> = meshes.iter()
-            .map(|m| {
-                let score = nostr::score_mesh(m, now_ts, last_mesh_id.as_deref());
-                (m, score)
-            })
+        let mut candidates: Vec<_> = filtered.iter()
+            .map(|m| (*m, nostr::score_mesh(m, now_ts, last_mesh_id.as_deref())))
             .collect();
         candidates.sort_by(|a, b| b.1.cmp(&a.1));
 
+        // Skip our own mesh (we'd be joining ourselves)
+        let our_mesh_id = node.mesh_id().await;
+
         let mut rejoined = false;
         for (mesh, _score) in &candidates {
+            if let (Some(ref ours), Some(ref theirs)) = (&our_mesh_id, &mesh.listing.mesh_id) {
+                if ours == theirs { continue; }
+            }
             let token = &mesh.listing.invite_token;
             match probe_mesh_health(token, &relay_urls).await {
                 Ok(()) => {
