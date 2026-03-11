@@ -100,6 +100,16 @@ pub static MODEL_PROFILES: &[ModelProfile] = &[
         strengths: &[Category::Reasoning, Category::Chat],
         tier: 3,
     },
+    ModelProfile {
+        name: "Qwen3.5-27B-Q4_K_M",
+        strengths: &[Category::Code, Category::Reasoning, Category::Chat],
+        tier: 3,
+    },
+    ModelProfile {
+        name: "Qwen3-Coder-Next-Q4_K_M",
+        strengths: &[Category::Code, Category::ToolCall, Category::Reasoning],
+        tier: 4,
+    },
     // ── Tier 2: Good ────────────────────────────────────────────
     ModelProfile {
         name: "Mistral-Small-3.1-24B-Instruct-Q4_K_M",
