@@ -687,9 +687,8 @@ async fn download_with_resume(dest: &Path, url: &str) -> Result<()> {
         }
     }
 
-    // Clean up partial on total failure
-    let _ = tokio::fs::remove_file(&tmp).await;
-    anyhow::bail!("Download failed after 5 attempts");
+    // Keep partial file for resume on next run
+    anyhow::bail!("Download failed after 5 attempts (partial file kept for resume)");
 }
 
 fn print_progress(downloaded: u64, total: Option<u64>) {
