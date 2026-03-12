@@ -7,8 +7,6 @@ mod moe;
 mod nostr;
 mod proxy;
 mod rewrite;
-#[allow(dead_code)]  // Ready for proxy response inspection — not wired yet
-mod quality;
 mod router;
 mod tunnel;
 

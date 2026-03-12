@@ -650,10 +650,6 @@ impl Node {
     }
 
     /// Connect to a peer without gossip exchange — for passive nodes (clients/standby).
-    /// Establishes QUIC connection and stores it, but doesn't add to peer list.
-    /// The passive node can then use route requests and HTTP tunnels.
-    #[allow(dead_code)]
-    pub fn endpoint(&self) -> &Endpoint { &self.endpoint }
     pub fn id(&self) -> EndpointId { self.endpoint.id() }
 
     pub async fn role(&self) -> NodeRole {
@@ -832,11 +828,6 @@ impl Node {
             }
         }
         *self.requested_models.lock().await = models;
-    }
-
-    #[allow(dead_code)]
-    pub async fn requested_models(&self) -> Vec<String> {
-        self.requested_models.lock().await.clone()
     }
 
     /// Start a background task that periodically checks peer health.
@@ -1021,18 +1012,6 @@ impl Node {
         tokio::time::sleep(std::time::Duration::from_millis(200)).await;
     }
 
-    /// Get model source from any peer in the mesh (for auto-download on join).
-    #[allow(dead_code)]
-    pub async fn peer_model_source(&self) -> Option<String> {
-        let state = self.state.lock().await;
-        for p in state.peers.values() {
-            if let Some(ref src) = p.model_source {
-                return Some(src.clone());
-            }
-        }
-        None
-    }
-
     /// Get the mesh catalog: all models that any node has on disk or has requested.
     /// Returns deduplicated list of model names (file stems, no .gguf).
     pub async fn mesh_catalog(&self) -> Vec<String> {
@@ -1097,20 +1076,6 @@ impl Node {
         let mut result: Vec<String> = served.into_iter().collect();
         result.sort();
         result
-    }
-
-    /// Get peers serving a specific model (including self if applicable).
-    /// Returns (my_serving, peers_serving) — my_serving is true if this node serves it.
-    #[allow(dead_code)]
-    pub async fn peers_serving_model(&self, model: &str) -> (bool, Vec<PeerInfo>) {
-        let state = self.state.lock().await;
-        let my_serving = self.serving.lock().await;
-        let i_serve = my_serving.as_deref() == Some(model);
-        let peers: Vec<PeerInfo> = state.peers.values()
-            .filter(|p| p.serving.as_deref() == Some(model))
-            .cloned()
-            .collect();
-        (i_serve, peers)
     }
 
     /// Find a host for a specific model, using hash-based selection for load distribution.
@@ -1187,29 +1152,6 @@ impl Node {
         self.vram_bytes
     }
 
-    /// Detect region from this node's relay URL.
-    #[allow(dead_code)]
-    pub fn detect_region(&self) -> Option<String> {
-        use iroh::TransportAddr;
-        let addr = self.endpoint.addr();
-        for transport_addr in &addr.addrs {
-            if let TransportAddr::Relay(url) = transport_addr {
-                let host = url.as_str().strip_prefix("https://")
-                    .or_else(|| url.as_str().strip_prefix("http://"))?;
-                let prefix = host.split('.').next()?;
-                let code = prefix.split('-').next()?;
-                return match code {
-                    "aps1" | "aps2" => Some("AU".into()),
-                    "apn1" | "apn2" => Some("JP".into()),
-                    "usw1" | "usw2" | "use1" | "use2" => Some("US".into()),
-                    "euw1" | "euw2" | "euc1" | "euc2" => Some("EU".into()),
-                    _ => None,
-                };
-            }
-        }
-        None
-    }
-
     pub async fn peers(&self) -> Vec<PeerInfo> {
         self.state.lock().await.peers.values().cloned().collect()
     }
@@ -1229,21 +1171,6 @@ impl Node {
             }
         }
         false
-    }
-
-    /// Wait for a peer with Host role to appear. Returns its PeerInfo.
-    #[allow(dead_code)]
-    pub async fn wait_for_host(&self) -> Result<PeerInfo> {
-        loop {
-            let peers = self.peers().await;
-            for p in &peers {
-                if matches!(p.role, NodeRole::Host { .. }) {
-                    return Ok(p.clone());
-                }
-            }
-            // Poll every 500ms
-            tokio::time::sleep(std::time::Duration::from_millis(500)).await;
-        }
     }
 
     /// Open an HTTP tunnel bi-stream to a peer (tagged STREAM_TUNNEL_HTTP).

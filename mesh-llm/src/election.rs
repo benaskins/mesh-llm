@@ -111,18 +111,6 @@ impl ModelTargets {
         }
     }
 
-    /// Get target with an explicit index (for round-robin from proxy)
-    #[allow(dead_code)]
-    pub fn get_nth(&self, model: &str, n: u64) -> InferenceTarget {
-        match self.targets.get(model) {
-            Some(targets) if !targets.is_empty() => {
-                let idx = (n as usize) % targets.len();
-                targets[idx].clone()
-            }
-            _ => InferenceTarget::None,
-        }
-    }
-
     /// Get MoE target for a session (hash-based routing).
     /// Returns None if not in MoE mode.
     pub fn get_moe_target(&self, session_hint: &str) -> Option<InferenceTarget> {
@@ -134,15 +122,6 @@ impl ModelTargets {
         Some(moe.nodes[idx].clone())
     }
 
-    /// List all available model names.
-    #[allow(dead_code)]
-    pub fn available_models(&self) -> Vec<String> {
-        self.targets
-            .keys()
-            .filter(|k| !self.targets[k.as_str()].is_empty())
-            .cloned()
-            .collect()
-    }
 }
 
 /// Compute shard index for a node given all node IDs in the MoE group.
