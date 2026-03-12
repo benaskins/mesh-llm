@@ -103,14 +103,18 @@ pub async fn handle_mesh_request(node: mesh::Node, tcp_stream: TcpStream, track_
     let routed_model = if model_name.is_none() || model_name.as_deref() == Some("auto") {
         if let Some(body_json) = extract_body_json(&buf[..n]) {
             let category = router::classify(&body_json);
+            let tools_required = body_json.get("tools")
+                .and_then(|t| t.as_array())
+                .map(|a| !a.is_empty())
+                .unwrap_or(false);
             let served = node.models_being_served().await;
             // Build available models with placeholder speed (TODO: track real tok/s)
             let available: Vec<(&str, f64)> = served.iter()
                 .map(|name| (name.as_str(), 0.0))
                 .collect();
-            let picked = router::pick_model(category, &available);
+            let picked = router::pick_model_with_tools(category, &available, tools_required);
             if let Some(name) = picked {
-                tracing::info!("router: {:?} → {name}", category);
+                tracing::info!("router: {:?} → {name} (tools={})", category, tools_required);
                 Some(name.to_string())
             } else {
                 None

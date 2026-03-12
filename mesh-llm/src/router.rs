@@ -23,6 +23,9 @@ pub struct ModelProfile {
     pub name: &'static str,
     pub strengths: &'static [Category],
     pub tier: Tier,
+    /// Whether this model can handle tool-calling requests (function calling).
+    /// Models without this set to true are filtered out when tools are present.
+    pub tools: bool,
 }
 
 /// Static profiles for catalog models.
@@ -32,165 +35,165 @@ pub static MODEL_PROFILES: &[ModelProfile] = &[
     ModelProfile {
         name: "Qwen3-235B-A22B-Q4_K_M",
         strengths: &[Category::Code, Category::Reasoning, Category::Chat, Category::Creative],
-        tier: 4,
+        tier: 4, tools: true,
     },
     ModelProfile {
         name: "Llama-3.1-405B-Instruct-Q2_K",
         strengths: &[Category::Chat, Category::Reasoning, Category::Code],
-        tier: 4,
+        tier: 4, tools: true,
     },
     ModelProfile {
         name: "MiniMax-M2.5-Q4_K_M",
         strengths: &[Category::Code, Category::Reasoning, Category::Chat, Category::Creative, Category::ToolCall],
-        tier: 4,
+        tier: 4, tools: true,
     },
     // ── Tier 3: Strong ──────────────────────────────────────────
     ModelProfile {
         name: "Qwen2.5-72B-Instruct-Q4_K_M",
         strengths: &[Category::Chat, Category::Reasoning, Category::Code],
-        tier: 3,
+        tier: 3, tools: true,
     },
     ModelProfile {
         name: "Llama-3.3-70B-Instruct-Q4_K_M",
         strengths: &[Category::Chat, Category::ToolCall, Category::Code],
-        tier: 3,
+        tier: 3, tools: true,
     },
     ModelProfile {
         name: "DeepSeek-R1-Distill-70B-Q4_K_M",
         strengths: &[Category::Reasoning],
-        tier: 3,
+        tier: 3, tools: false, // reasoning-only, no tool support
     },
     ModelProfile {
         name: "Mixtral-8x22B-Instruct-Q4_K_M",
         strengths: &[Category::Chat, Category::Code, Category::Reasoning],
-        tier: 3,
+        tier: 3, tools: true,
     },
     ModelProfile {
         name: "Qwen3-32B-Q4_K_M",
         strengths: &[Category::Reasoning, Category::Code, Category::Chat],
-        tier: 3,
+        tier: 3, tools: true,
     },
     ModelProfile {
         name: "Qwen2.5-Coder-32B-Instruct-Q4_K_M",
         strengths: &[Category::Code],
-        tier: 3,
+        tier: 3, tools: true,
     },
     ModelProfile {
         name: "DeepSeek-R1-Distill-Qwen-32B-Q4_K_M",
         strengths: &[Category::Reasoning],
-        tier: 3,
+        tier: 3, tools: false,
     },
     ModelProfile {
         name: "Qwen3-30B-A3B-Q4_K_M",
         strengths: &[Category::Chat, Category::Reasoning, Category::Code],
-        tier: 3,
+        tier: 3, tools: true,
     },
     ModelProfile {
         name: "Qwen3-Coder-30B-A3B-Instruct-Q4_K_M",
         strengths: &[Category::Code, Category::ToolCall],
-        tier: 3,
+        tier: 3, tools: true,
     },
     ModelProfile {
         name: "Qwen2.5-32B-Instruct-Q4_K_M",
         strengths: &[Category::Chat, Category::Reasoning],
-        tier: 3,
+        tier: 3, tools: true,
     },
     ModelProfile {
         name: "Gemma-3-27B-it-Q4_K_M",
         strengths: &[Category::Reasoning, Category::Chat],
-        tier: 3,
+        tier: 3, tools: false, // unreliable tool calling
     },
     ModelProfile {
         name: "Qwen3.5-27B-Q4_K_M",
         strengths: &[Category::Code, Category::Reasoning, Category::Chat],
-        tier: 3,
+        tier: 3, tools: true,
     },
     ModelProfile {
         name: "Qwen3-Coder-Next-Q4_K_M",
         strengths: &[Category::Code, Category::ToolCall, Category::Reasoning],
-        tier: 4,
+        tier: 4, tools: true,
     },
     // ── Tier 2: Good ────────────────────────────────────────────
     ModelProfile {
         name: "Mistral-Small-3.1-24B-Instruct-Q4_K_M",
         strengths: &[Category::Chat, Category::ToolCall],
-        tier: 2,
+        tier: 2, tools: true,
     },
     ModelProfile {
         name: "Devstral-Small-2505-Q4_K_M",
         strengths: &[Category::Code, Category::ToolCall],
-        tier: 2,
+        tier: 2, tools: true,
     },
     ModelProfile {
         name: "GLM-4.7-Flash-Q4_K_M",
         strengths: &[Category::Chat, Category::ToolCall],
-        tier: 2,
+        tier: 2, tools: true,
     },
     ModelProfile {
         name: "GLM-4-32B-0414-Q4_K_M",
         strengths: &[Category::Chat, Category::ToolCall, Category::Code],
-        tier: 2,
+        tier: 2, tools: true,
     },
     ModelProfile {
         name: "Llama-4-Scout-Q4_K_M",
         strengths: &[Category::Chat, Category::ToolCall],
-        tier: 2,
+        tier: 2, tools: true,
     },
     ModelProfile {
         name: "Qwen3-14B-Q4_K_M",
         strengths: &[Category::Chat, Category::Reasoning],
-        tier: 2,
+        tier: 2, tools: true,
     },
     ModelProfile {
         name: "Qwen2.5-14B-Instruct-Q4_K_M",
         strengths: &[Category::Chat],
-        tier: 2,
+        tier: 2, tools: true,
     },
     ModelProfile {
         name: "Qwen2.5-Coder-14B-Instruct-Q4_K_M",
         strengths: &[Category::Code],
-        tier: 2,
+        tier: 2, tools: true,
     },
     ModelProfile {
         name: "DeepSeek-R1-Distill-Qwen-14B-Q4_K_M",
         strengths: &[Category::Reasoning],
-        tier: 2,
+        tier: 2, tools: false,
     },
     ModelProfile {
         name: "Gemma-3-12B-it-Q4_K_M",
         strengths: &[Category::Chat, Category::Reasoning],
-        tier: 2,
+        tier: 2, tools: false,
     },
     ModelProfile {
         name: "Qwen3-8B-Q4_K_M",
         strengths: &[Category::Chat, Category::Code],
-        tier: 2,
+        tier: 2, tools: true,
     },
     ModelProfile {
         name: "Hermes-2-Pro-Mistral-7B-Q4_K_M",
         strengths: &[Category::ToolCall, Category::Chat],
-        tier: 2,
+        tier: 2, tools: true,
     },
     ModelProfile {
         name: "Qwen2.5-Coder-7B-Instruct-Q4_K_M",
         strengths: &[Category::Code],
-        tier: 2,
+        tier: 2, tools: true,
     },
     // ── Tier 1: Small / Draft ───────────────────────────────────
     ModelProfile {
         name: "Qwen3-4B-Q4_K_M",
         strengths: &[Category::Chat],
-        tier: 1,
+        tier: 1, tools: true,
     },
     ModelProfile {
         name: "Qwen2.5-3B-Instruct-Q4_K_M",
         strengths: &[Category::Chat],
-        tier: 1,
+        tier: 1, tools: true,
     },
     ModelProfile {
         name: "Llama-3.2-3B-Instruct-Q4_K_M",
         strengths: &[Category::Chat, Category::ToolCall],
-        tier: 1,
+        tier: 1, tools: true,
     },
 ];
 
@@ -321,19 +324,49 @@ fn collect_message_text(body: &Value) -> String {
 
 // ── Model selection ─────────────────────────────────────────────────
 
-/// Pick the best model from available models for a given category.
-/// Returns the model name. Falls back to highest-tier available model
-/// if nothing matches the category specifically.
+/// Pick the best model from available models for a given category (no tool filter).
+#[cfg(test)]
 pub fn pick_model<'a>(
     category: Category,
-    available_models: &[(&'a str, f64)], // (model_name, observed_tok_per_sec)
+    available_models: &[(&'a str, f64)],
+) -> Option<&'a str> {
+    pick_model_inner(category, available_models, false)
+}
+
+/// Pick the best model, filtering for tool-capable models when needed.
+pub fn pick_model_with_tools<'a>(
+    category: Category,
+    available_models: &[(&'a str, f64)],
+    tools_required: bool,
+) -> Option<&'a str> {
+    pick_model_inner(category, available_models, tools_required)
+}
+
+fn pick_model_inner<'a>(
+    category: Category,
+    available_models: &[(&'a str, f64)],
+    tools_required: bool,
 ) -> Option<&'a str> {
     if available_models.is_empty() {
         return None;
     }
 
+    // Filter for tool-capable models if tools are required
+    let filtered: Vec<(&str, f64)> = if tools_required {
+        available_models.iter()
+            .filter(|(name, _)| {
+                profile_for(name).map(|p| p.tools).unwrap_or(false)
+            })
+            .copied()
+            .collect()
+    } else {
+        available_models.to_vec()
+    };
+    // Fall back to all models if no tool-capable model found
+    let candidates = if filtered.is_empty() { available_models } else { &filtered };
+
     // Score each available model for this category
-    let mut scored: Vec<(&str, i32)> = available_models
+    let mut scored: Vec<(&str, i32)> = candidates
         .iter()
         .map(|(name, tok_s)| {
             let profile = profile_for(name);
@@ -524,3 +557,27 @@ mod tests {
         assert_eq!(p.unwrap().tier, 4);
     }
 }
+
+    #[test]
+    fn test_tools_filter_prefers_capable() {
+        let available = vec![
+            ("DeepSeek-R1-Distill-Qwen-32B-Q4_K_M", 10.0), // tools: false, Reasoning only
+            ("Hermes-2-Pro-Mistral-7B-Q4_K_M", 50.0),       // tools: true
+        ];
+        // Without tools, Reasoning request: DeepSeek wins (primary strength match + higher tier)
+        let result = pick_model_with_tools(Category::Reasoning, &available, false);
+        assert_eq!(result, Some("DeepSeek-R1-Distill-Qwen-32B-Q4_K_M"));
+        // With tools, Reasoning request: Hermes wins (DeepSeek filtered out — can't do tools)
+        let result = pick_model_with_tools(Category::Reasoning, &available, true);
+        assert_eq!(result, Some("Hermes-2-Pro-Mistral-7B-Q4_K_M"));
+    }
+
+    #[test]
+    fn test_tools_filter_fallback_when_none_capable() {
+        let available = vec![
+            ("DeepSeek-R1-Distill-Qwen-32B-Q4_K_M", 10.0), // tools: false
+        ];
+        // With tools required but nothing capable: falls back to available
+        let result = pick_model_with_tools(Category::Reasoning, &available, true);
+        assert_eq!(result, Some("DeepSeek-R1-Distill-Qwen-32B-Q4_K_M"));
+    }

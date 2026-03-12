@@ -1378,12 +1378,16 @@ async fn api_proxy(node: mesh::Node, port: u16, target_rx: tokio::sync::watch::R
                     let effective_model = if model_name.is_none() || model_name.as_deref() == Some("auto") {
                         if let Some(body_json) = proxy::extract_body_json(&buf[..n]) {
                             let category = router::classify(&body_json);
+                            let tools_required = body_json.get("tools")
+                                .and_then(|t| t.as_array())
+                                .map(|a| !a.is_empty())
+                                .unwrap_or(false);
                             let available: Vec<(&str, f64)> = targets.targets.keys()
                                 .map(|name| (name.as_str(), 0.0))
                                 .collect();
-                            let picked = router::pick_model(category, &available);
+                            let picked = router::pick_model_with_tools(category, &available, tools_required);
                             if let Some(name) = picked {
-                                tracing::info!("router: {:?} → {name}", category);
+                                tracing::info!("router: {:?} → {name} (tools={})", category, tools_required);
                                 Some(name.to_string())
                             } else {
                                 None
