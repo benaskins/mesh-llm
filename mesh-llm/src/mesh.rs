@@ -502,13 +502,11 @@ impl Node {
             load_or_create_key().await?
         };
         // Configure QUIC transport for heavy RPC traffic:
-        // - Allow many concurrent bi-streams (model loading opens hundreds)
-        // - Long idle timeout to survive pauses during tensor transfers
+        // Use iroh's default transport config — it sets keep_alive, path timeouts,
+        // and multipath correctly. Only override the bidi stream limit.
         use iroh::endpoint::QuicTransportConfig;
         let transport_config = QuicTransportConfig::builder()
             .max_concurrent_bidi_streams(1024u32.into())
-            .max_idle_timeout(Some(std::time::Duration::from_secs(30).try_into()?))
-            .keep_alive_interval(std::time::Duration::from_secs(5))
             .build();
         let mut builder = Endpoint::builder()
             .secret_key(secret_key)
@@ -1438,15 +1436,13 @@ impl Node {
                                 });
                             }
                             _ => {
-                                // Don't remove the peer — let heartbeat's 2-strike system
-                                // handle it. The peer may still be alive and reach us via
-                                // inbound gossip, or the next heartbeat cycle may succeed.
-                                eprintln!("⚠️  Reconnect to {} failed — keeping peer for heartbeat retry", remote.fmt_short());
+                                tracing::info!("Reconnect to {} failed — removing peer", remote.fmt_short());
+                                self.remove_peer(remote).await;
                             }
                         }
                     } else {
-                        // No address on file — peer was already removed elsewhere
-                        tracing::info!("No address for {} — already cleaned up", remote.fmt_short());
+                        // No address on file, can't reconnect
+                        self.remove_peer(remote).await;
                     }
                     break;
                 }
