@@ -56,7 +56,7 @@
     <nav>
         <a class="logo" href="#"><img src="mesh-llm-logo.svg" alt="mesh-llm"></a>
         <div class="links">
-            <a href="#how">How it works</a>
+            <a href="#install">Quick start</a>
             <a href="#models">Models</a>
             <a href="#agents">Agents</a>
             <a href="#features">Features</a>
@@ -119,43 +119,6 @@
             <span class="tag">Demand-aware rebalancing</span>
             <span class="tag">Nostr discovery</span>
             <span class="tag">macOS + Linux</span>
-        </div>
-    </section>
-
-    <section id="how">
-        <div class="section-tag">How it works</div>
-        <h2>Three commands</h2>
-        <p class="section-lead">No coordinator, no cloud, no API keys. Machines pool their VRAM over QUIC.</p>
-
-        <div class="steps">
-            <div class="step">
-                <div class="step-num">1</div>
-                <h3>Start a mesh</h3>
-                <p>Pick a model. mesh-llm downloads it, detects the best distribution strategy, starts serving, prints an invite token.</p>
-            </div>
-            <div class="step">
-                <div class="step-num">2</div>
-                <h3>Others join</h3>
-                <p>Paste the token or use <code>--auto</code> to discover via Nostr. The mesh auto-assigns models — pipeline split for dense, expert shard for MoE.</p>
-            </div>
-            <div class="step">
-                <div class="step-num">3</div>
-                <h3>Use it</h3>
-                <p>Every node gets <code>localhost:9337/v1</code> — standard OpenAI API. Works with any tool.</p>
-            </div>
-        </div>
-
-        <div class="code-block">
-            <span class="comment"># Start a mesh with two models</span><br>
-            <span class="cmd">mesh-llm</span> <span class="flag">--model</span> <span class="val">Qwen2.5-32B</span> <span class="flag">--model</span> <span class="val">GLM-4.7-Flash</span><br><br>
-            <span class="comment"># Another machine joins — auto-assigned to whichever model needs it</span><br>
-            <span class="cmd">mesh-llm</span> <span class="flag">--join</span> <span class="val">&lt;token&gt;</span><br><br>
-            <span class="comment"># Or discover public meshes and join automatically</span><br>
-            <span class="cmd">mesh-llm</span> <span class="flag">--auto</span><br><br>
-            <span class="comment"># Create a shared mesh — everyone runs the same command</span><br>
-            <span class="cmd">mesh-llm</span> <span class="flag">--auto</span> <span class="flag">--model</span> <span class="val">GLM-4.7-Flash</span> <span class="flag">--mesh-name</span> <span class="val">"poker-night"</span><br><br>
-            <span class="comment"># Route requests by model name</span><br>
-            <span class="cmd">curl</span> localhost:9337/v1/chat/completions <span class="flag">-d</span> <span class="val">'{"model":"GLM-4.7-Flash-Q4_K_M", ...}'</span>
         </div>
     </section>
 
@@ -228,7 +191,11 @@
             <span class="comment"># Join the public mesh — instant chat, zero config</span><br>
             <span class="cmd">mesh-llm</span> <span class="flag">--auto</span><br><br>
             <span class="comment"># Or start your own mesh with a model</span><br>
-            <span class="cmd">mesh-llm</span> <span class="flag">--model</span> <span class="val">GLM-4.7-Flash-Q4_K_M</span>
+            <span class="cmd">mesh-llm</span> <span class="flag">--model</span> <span class="val">GLM-4.7-Flash</span><br><br>
+            <span class="comment"># Launch Goose with the mesh (picks strongest model automatically)</span><br>
+            <span class="cmd">mesh-llm</span> goose<br><br>
+            <span class="comment"># Launch Claude Code with the mesh</span><br>
+            <span class="cmd">mesh-llm</span> claude
         </div>
     </section>
 
