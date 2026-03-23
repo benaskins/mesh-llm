@@ -43,10 +43,8 @@ import {
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import rehypeHighlight from 'rehype-highlight';
-import rehypeKatex from 'rehype-katex';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
-import 'katex/dist/katex.min.css';
 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './components/ui/accordion';
 import { Alert, AlertDescription, AlertTitle } from './components/ui/alert';
@@ -1892,12 +1890,13 @@ function ChatPage(props: {
                 </div>
               ) : (
                 <>
-                  {messages.map((message) => (
+                  {messages.map((message, i) => (
                     <ChatBubble
                       key={message.id}
                       message={message}
                       reasoningOpen={!!reasoningOpen[message.id]}
                       onReasoningToggle={(open) => setReasoningOpen((prev) => ({ ...prev, [message.id]: open }))}
+                      streaming={isSending && i === messages.length - 1}
                     />
                   ))}
 
@@ -2943,6 +2942,42 @@ function layoutTopologyNodes(
   return positioned;
 }
 
+// KaTeX math renderer — loads from CDN on first use
+let katexCssLoaded = false;
+const katexPromise = import('https://cdn.jsdelivr.net/npm/katex@0.16/dist/katex.mjs' as string).then(m => {
+  if (!katexCssLoaded) {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'https://cdn.jsdelivr.net/npm/katex@0.16/dist/katex.min.css';
+    document.head.appendChild(link);
+    katexCssLoaded = true;
+  }
+  return m.default;
+}).catch(() => null);
+
+function KaTeXBlock({ math, display }: { math: string; display: boolean }) {
+  const [html, setHtml] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    katexPromise.then((katex) => {
+      if (cancelled || !katex) return;
+      try {
+        const rendered = katex.renderToString(math, { displayMode: display, throwOnError: false });
+        if (!cancelled) setHtml(rendered);
+      } catch {
+        if (!cancelled) setHtml(null);
+      }
+    });
+    return () => { cancelled = true; };
+  }, [math, display]);
+
+  if (html === null) return display ? <div className="my-2 overflow-x-auto text-sm"><code>{math}</code></div> : <code>{math}</code>;
+  return display
+    ? <div className="my-2 overflow-x-auto" dangerouslySetInnerHTML={{ __html: html }} />
+    : <span dangerouslySetInnerHTML={{ __html: html }} />;
+}
+
 // Mermaid diagram renderer — loads mermaid from CDN on first use
 const mermaidPromise = import('https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs' as string).then(m => {
   m.default.initialize({ startOnLoad: false, theme: 'dark', securityLevel: 'loose' });
@@ -2974,7 +3009,7 @@ function MermaidBlock({ code }: { code: string }) {
   return <div ref={containerRef} className="my-2 overflow-x-auto rounded-lg border border-border/70 bg-background/80 p-3 [&_svg]:max-w-full" dangerouslySetInnerHTML={{ __html: svg }} />;
 }
 
-function MarkdownMessage({ content }: { content: string }) {
+function MarkdownMessage({ content, streaming }: { content: string; streaming?: boolean }) {
   return (
     <div
       className={cn(
@@ -2998,13 +3033,13 @@ function MarkdownMessage({ content }: { content: string }) {
     >
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath]}
-        rehypePlugins={[rehypeHighlight, rehypeKatex]}
+        rehypePlugins={[rehypeHighlight]}
         components={{
           code({ className, children, ...props }) {
-            const match = /language-mermaid/.exec(className || '');
-            if (match) {
-              const code = String(children).replace(/\n$/, '');
-              return <MermaidBlock code={code} />;
+            const text = String(children).replace(/\n$/, '');
+            if (!streaming) {
+              if (/language-mermaid/.test(className || '')) return <MermaidBlock code={text} />;
+              if (/language-math/.test(className || '')) return <KaTeXBlock math={text} display={/math-display/.test(className || '')} />;
             }
             return <code className={className} {...props}>{children}</code>;
           },
@@ -3020,10 +3055,12 @@ function ChatBubble({
   message,
   reasoningOpen,
   onReasoningToggle,
+  streaming,
 }: {
   message: ChatMessage;
   reasoningOpen: boolean;
   onReasoningToggle: (open: boolean) => void;
+  streaming?: boolean;
 }) {
   const isUser = message.role === 'user';
   const isThinking = !isUser && message.reasoning && !message.content;
@@ -3102,7 +3139,7 @@ function ChatBubble({
                   : 'bg-background',
             )}
           >
-            {message.content ? <MarkdownMessage content={message.content} /> : !isUser ? '...' : ''}
+            {message.content ? <MarkdownMessage content={message.content} streaming={streaming} /> : !isUser ? '...' : ''}
           </div>
         ) : null}
 
