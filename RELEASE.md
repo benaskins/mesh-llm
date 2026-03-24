@@ -73,7 +73,7 @@ gh release create ${VERSION} \
 ### Install (macOS Apple Silicon)
 
 \`\`\`bash
-curl -fsSL https://github.com/michaelneale/mesh-llm/releases/latest/download/mesh-bundle.tar.gz | tar xz && sudo mv mesh-bundle/* /usr/local/bin/
+curl -fsSL https://github.com/michaelneale/mesh-llm/releases/latest/download/mesh-bundle.tar.gz | tar xz && mv mesh-bundle/* ~/.local/bin/
 \`\`\`
 "
 ```
@@ -83,7 +83,7 @@ Two assets are uploaded: one with the version in the name (for pinning), one wit
 ### 7. Verify the install one-liner works
 
 ```bash
-curl -fsSL https://github.com/michaelneale/mesh-llm/releases/latest/download/mesh-bundle.tar.gz | tar xz && sudo mv mesh-bundle/* /usr/local/bin/
+curl -fsSL https://github.com/michaelneale/mesh-llm/releases/latest/download/mesh-bundle.tar.gz | tar xz && mv mesh-bundle/* ~/.local/bin/
 mesh-llm --model Qwen2.5-3B --console
 ```
 

@@ -2351,7 +2351,7 @@ async fn check_for_update() {
     if let Some(latest) = latest_release_version().await {
         if version_newer(&latest, VERSION) {
             eprintln!("💡 Update available: v{VERSION} → v{latest}  https://github.com/michaelneale/mesh-llm/releases");
-            eprintln!("   curl -fsSL https://github.com/michaelneale/mesh-llm/releases/latest/download/mesh-bundle.tar.gz | tar xz && sudo mv mesh-bundle/* /usr/local/bin/");
+            eprintln!("   curl -fsSL https://github.com/michaelneale/mesh-llm/releases/latest/download/mesh-bundle.tar.gz | tar xz && mv mesh-bundle/* ~/.local/bin/");
         }
     }
 }
