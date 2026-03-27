@@ -77,7 +77,7 @@ Read `mesh-llm/docs/TESTING.md` before running tests. It has all test scenarios,
 
 ## Formatting
 
-Before committing any Rust changes, run `cargo fmt --all` from the repo root and ensure the formatting changes are included in the commit.
+Before committing Rust changes, format only the changed Rust files from the repo root, for example with `cargo fmt --all -- path/to/file.rs`, and include those formatting changes in the commit.
 
 ### Deploy to Remote
 
