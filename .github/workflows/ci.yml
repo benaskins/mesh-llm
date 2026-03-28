@@ -132,10 +132,10 @@ jobs:
       - name: Clone llama.cpp fork
         run: git clone -b rebase-upstream-master --depth 1 https://github.com/michaelneale/llama.cpp.git llama.cpp
 
-      - name: Build llama.cpp (Metal + RPC)
+      - name: Build llama.cpp (CPU + RPC)
         run: |
           cmake -B llama.cpp/build -S llama.cpp \
-            -DGGML_METAL=ON \
+            -DGGML_METAL=OFF \
             -DGGML_RPC=ON \
             -DBUILD_SHARED_LIBS=OFF \
             -DLLAMA_OPENSSL=OFF
